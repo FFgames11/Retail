@@ -40,6 +40,7 @@ const BOX_LABELS = new Map([
   ["5-5:1-2", "Apple Shelf"],
   ["5-5:4-5", "Juice Shelf"],
   ["7-7:1-1", "Baskets"],
+  ["8-9:1-1", "Carpet"],
   ["8-9:5-5", "Cabinet"],
   ["10-10:2-4", "Counter"]
 ]);
@@ -76,7 +77,6 @@ const FINAL_REPLY_DELAY_MS = 4000;
 const REMINDER_BUBBLE_DELAY_MS = 5000;
 const PLAYER_ITEM_DELAY_MS = 3000;
 const CLEANING_DURATION_MS = 5000;
-const PROMPT_BUBBLE_DELAY_MS = 1800;
 const BG_MUSIC_VOLUME = 0.3;
 const CLICK_SFX_VOLUME = 0.3;
 const OBTAIN_SFX_VOLUME = 0.3;
@@ -495,7 +495,7 @@ async function showPlayerDialogue(text, audioKey, fallbackDuration) {
   await playDialogueAudio(audioKey, fallbackDuration);
 }
 
-async function showPromptBubble(actorId) {
+function showPromptBubble(actorId) {
   const actorElement = actorElements.get(actorId);
 
   if (!actorElement) {
@@ -503,8 +503,6 @@ async function showPromptBubble(actorId) {
   }
 
   showBubble(actorElement, "!", "prompt-bubble");
-  await wait(PROMPT_BUBBLE_DELAY_MS);
-  clearAllBubbles();
 }
 
 function showPlayerItemToken(text) {

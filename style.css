@@ -622,11 +622,19 @@ body {
 
 .choice-tray {
   position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: calc(var(--safe-bottom) + 14px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 190px;
   display: grid;
   gap: 10px;
+  padding: 21px 16px calc(var(--safe-bottom) + 21px);
+  border-radius: 24px 24px 0 0;
+  background: rgba(223, 231, 218, 0.94);
+  box-shadow:
+    0 -18px 40px rgba(57, 80, 61, 0.16),
+    0 0 0 999px rgba(24, 34, 25, 0.18);
+  backdrop-filter: blur(10px);
   z-index: 6;
   transform: translateY(20px);
   opacity: 0;
