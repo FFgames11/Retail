@@ -140,10 +140,6 @@ const progressBarFill = document.getElementById("progress-bar-fill");
 const clickSfx = new Audio("sfx/click.mp3");
 const obtainSfx = new Audio("sfx/obtain.mp3");
 const gameCompleteSfx = new Audio("sfx/game_complete.mp3");
-const PRELOAD_IMAGE_PATHS = [
-  "img/Top_1.png",
-  "img/Window_(hd).png"
-];
 
 const placeholders = [
   { id: "bread-shelf", type: "box", startRow: 1, endRow: 1, startColumn: 1, endColumn: 2 },
@@ -270,57 +266,52 @@ function updateLoadingProgress(completed, total) {
   }
 }
 
-function preloadImage(src) {
-  return new Promise((resolve) => {
-    const image = new Image();
-    const finish = () => resolve();
-
-    image.addEventListener("load", finish, { once: true });
-    image.addEventListener("error", finish, { once: true });
-    image.src = src;
-  });
+function getPreloadImagePaths() {
+  return [...new Set(
+    Array.from(document.querySelectorAll("img"))
+      .map((image) => image.getAttribute("src"))
+      .filter(Boolean)
+  )];
 }
 
-function preloadAudio(audio) {
-  return new Promise((resolve) => {
-    const finish = () => {
-      audio.removeEventListener("canplaythrough", finish);
-      audio.removeEventListener("error", finish);
-      resolve();
-    };
+async function preloadAsset(assetPath) {
+  try {
+    const response = await fetch(assetPath, { cache: "force-cache" });
 
-    audio.addEventListener("canplaythrough", finish, { once: true });
-    audio.addEventListener("error", finish, { once: true });
-    audio.load();
-  });
+    if (!response.ok) {
+      return;
+    }
+
+    await response.blob();
+  } catch {
+    // Ignore individual asset failures so one missing file does not block startup.
+  }
 }
 
 async function preloadAssets() {
+  const imagePaths = getPreloadImagePaths();
   const dialogueAudioPaths = Object.values(DIALOGUE_AUDIO_FILES).map((fileName) => `${DIALOGUE_AUDIO_BASE_PATH}/${fileName}`);
-  const audioPaths = [
+  const assetPaths = [
+    ...imagePaths,
     "bg_music/bg.mp3",
     "sfx/click.mp3",
     "sfx/obtain.mp3",
     "sfx/game_complete.mp3",
     ...dialogueAudioPaths
   ];
-  const totalAssets = PRELOAD_IMAGE_PATHS.length + audioPaths.length;
+  const totalAssets = assetPaths.length;
   let completedAssets = 0;
 
   updateLoadingProgress(0, totalAssets);
 
-  const trackProgress = async (loader) => {
-    await loader();
+  await Promise.all(assetPaths.map(async (assetPath) => {
+    await preloadAsset(assetPath);
     completedAssets += 1;
     updateLoadingProgress(completedAssets, totalAssets);
-  };
+  }));
 
-  for (const imagePath of PRELOAD_IMAGE_PATHS) {
-    await trackProgress(() => preloadImage(imagePath));
-  }
-
-  for (const audioPath of audioPaths) {
-    await trackProgress(() => preloadAudio(new Audio(audioPath)));
+  if (loadingTextElement) {
+    loadingTextElement.textContent = "Assets ready";
   }
 }
 
