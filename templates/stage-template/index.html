@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Mobile Puzzle Board Prototype</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="phone-frame" aria-label="Portrait game board">
+      <div class="game-screen">
+        <section class="board-stage" aria-label="Puzzle board layout">
+          <div class="board-shell">
+            <div class="side-gap" aria-hidden="true"></div>
+            <div class="path-wrap">
+              <div id="grid" class="game-grid" role="grid" aria-label="Centered tiled walkway"></div>
+              <div id="glow-layer" class="glow-layer" aria-hidden="true">
+                <div id="tile-glow" class="tile-glow"></div>
+              </div>
+              <div id="asset-layer" class="asset-layer" aria-hidden="true"></div>
+              <div id="player-layer" class="player-layer" aria-hidden="true">
+                <div id="player" class="player-placeholder"></div>
+              </div>
+            </div>
+            <div class="side-gap" aria-hidden="true"></div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

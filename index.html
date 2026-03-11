@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Mobile Puzzle Board Prototype</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <audio id="bg-music" src="bg_music/bg.mp3" loop preload="auto" aria-hidden="true"></audio>
+  <main class="app-shell">
+    <section class="phone-frame" aria-label="Portrait game board">
+      <div class="game-screen">
+        <button id="bg-music-toggle" class="bg-music-toggle" type="button" aria-label="Mute background music" aria-pressed="false">
+          <span class="bg-music-toggle-icon" aria-hidden="true">🔊</span>
+        </button>
+        <section class="board-stage" aria-label="Puzzle board layout">
+          <div class="board-shell">
+            <div id="board-camera" class="board-camera">
+              <div id="board-world" class="board-world">
+                <div class="top-gap board-top-decoration" aria-hidden="true">
+                  <img class="board-top-image" src="img/Top_1.png" alt="">
+                </div>
+                <div class="side-gap board-left-decoration" aria-hidden="true">
+                  <div class="test-yellow-box"></div>
+                  <img class="board-decoration-image" src="img/Window_(hd).png" alt="">
+                </div>
+                <div class="path-wrap">
+                  <div id="grid" class="game-grid" role="grid" aria-label="Centered tiled walkway"></div>
+                  <div id="glow-layer" class="glow-layer" aria-hidden="true">
+                    <div id="tile-glow" class="tile-glow"></div>
+                  </div>
+                  <div id="asset-layer" class="asset-layer" aria-hidden="true"></div>
+                  <div id="player-layer" class="player-layer" aria-hidden="true">
+                    <div id="player" class="player-placeholder">
+                      <div id="cleaning-progress-wrap" class="cleaning-progress-wrap" hidden>
+                        <div class="progress-bar-bg">
+                          <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                        </div>
+                        <span class="progress-text">Cleaning...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="side-gap board-right-decoration" aria-hidden="true">
+                  <div class="test-yellow-box"></div>
+                  <img class="board-decoration-image is-flipped" src="img/Window_(hd).png" alt="">
+                </div>
+                <div class="bottom-gap board-bottom-decoration" aria-hidden="true">
+                  <img class="board-top-image" src="img/Top_1.png" alt="">
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="choice-tray" class="choice-tray" aria-label="Dialogue choices" hidden>
+          <button id="choice-a" class="choice-button" type="button"></button>
+          <button id="choice-b" class="choice-button" type="button"></button>
+        </section>
+
+        <div id="modal-overlay" class="modal-overlay" hidden>
+          <div class="modal-content">
+            <h2 id="modal-title">Cabinet</h2>
+            <div id="emoji-grid" class="emoji-grid"></div>
+            <button id="modal-close" class="modal-close-button" type="button">Close</button>
+          </div>
+        </div>
+
+        <div id="congrats-modal" class="modal-overlay" hidden>
+          <div class="modal-content congrats-content">
+            <h2>Congratulations!</h2>
+            <p>You've prepared everything for breakfast.</p>
+            <button id="reset-button" class="choice-button" type="button">Reset Game</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
