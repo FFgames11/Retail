@@ -124,6 +124,9 @@ const gameScreenElement = document.querySelector(".game-screen");
 const playerElement = document.getElementById("player");
 const bgMusicElement = document.getElementById("bg-music");
 const bgMusicToggleElement = document.getElementById("bg-music-toggle");
+const loadingScreenElement = document.getElementById("loading-screen");
+const loadingBarFillElement = document.getElementById("loading-bar-fill");
+const loadingTextElement = document.getElementById("loading-text");
 const choiceTrayElement = document.getElementById("choice-tray");
 const choiceAElement = document.getElementById("choice-a");
 const choiceBElement = document.getElementById("choice-b");
@@ -137,6 +140,10 @@ const progressBarFill = document.getElementById("progress-bar-fill");
 const clickSfx = new Audio("sfx/click.mp3");
 const obtainSfx = new Audio("sfx/obtain.mp3");
 const gameCompleteSfx = new Audio("sfx/game_complete.mp3");
+const PRELOAD_IMAGE_PATHS = [
+  "img/Top_1.png",
+  "img/Window_(hd).png"
+];
 
 const placeholders = [
   { id: "bread-shelf", type: "box", startRow: 1, endRow: 1, startColumn: 1, endColumn: 2 },
@@ -251,6 +258,80 @@ function wait(duration) {
   return new Promise((resolve) => {
     window.setTimeout(resolve, duration);
   });
+}
+
+function updateLoadingProgress(completed, total) {
+  if (loadingBarFillElement) {
+    loadingBarFillElement.style.width = `${(completed / total) * 100}%`;
+  }
+
+  if (loadingTextElement) {
+    loadingTextElement.textContent = `Loading assets ${completed}/${total}`;
+  }
+}
+
+function preloadImage(src) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    const finish = () => resolve();
+
+    image.addEventListener("load", finish, { once: true });
+    image.addEventListener("error", finish, { once: true });
+    image.src = src;
+  });
+}
+
+function preloadAudio(audio) {
+  return new Promise((resolve) => {
+    const finish = () => {
+      audio.removeEventListener("canplaythrough", finish);
+      audio.removeEventListener("error", finish);
+      resolve();
+    };
+
+    audio.addEventListener("canplaythrough", finish, { once: true });
+    audio.addEventListener("error", finish, { once: true });
+    audio.load();
+  });
+}
+
+async function preloadAssets() {
+  const dialogueAudioPaths = Object.values(DIALOGUE_AUDIO_FILES).map((fileName) => `${DIALOGUE_AUDIO_BASE_PATH}/${fileName}`);
+  const audioPaths = [
+    "bg_music/bg.mp3",
+    "sfx/click.mp3",
+    "sfx/obtain.mp3",
+    "sfx/game_complete.mp3",
+    ...dialogueAudioPaths
+  ];
+  const totalAssets = PRELOAD_IMAGE_PATHS.length + audioPaths.length;
+  let completedAssets = 0;
+
+  updateLoadingProgress(0, totalAssets);
+
+  const trackProgress = async (loader) => {
+    await loader();
+    completedAssets += 1;
+    updateLoadingProgress(completedAssets, totalAssets);
+  };
+
+  for (const imagePath of PRELOAD_IMAGE_PATHS) {
+    await trackProgress(() => preloadImage(imagePath));
+  }
+
+  for (const audioPath of audioPaths) {
+    await trackProgress(() => preloadAudio(new Audio(audioPath)));
+  }
+}
+
+async function hideLoadingScreen() {
+  if (!loadingScreenElement) {
+    return;
+  }
+
+  loadingScreenElement.classList.add("is-hidden");
+  await wait(260);
+  loadingScreenElement.hidden = true;
 }
 
 function initializeClickSfx() {
@@ -1451,8 +1532,6 @@ buildGrid();
 buildColliderMap();
 buildPlaceholders();
 initializePlayer();
-initializeBackgroundMusic();
-initializeClickSfx();
 renderChoiceState();
 updateSceneInputState();
 
@@ -1493,4 +1572,12 @@ resetButton.onclick = () => {
   window.location.reload();
 };
 
-playSceneIntro();
+async function startGame() {
+  await preloadAssets();
+  initializeBackgroundMusic();
+  initializeClickSfx();
+  await hideLoadingScreen();
+  playSceneIntro();
+}
+
+startGame();

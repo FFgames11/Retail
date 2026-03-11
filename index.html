@@ -7,6 +7,15 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div id="loading-screen" class="loading-screen" role="status" aria-live="polite">
+    <div class="loading-panel">
+      <div class="loading-title">Loading</div>
+      <div class="loading-bar">
+        <div id="loading-bar-fill" class="loading-bar-fill"></div>
+      </div>
+      <div id="loading-text" class="loading-text">Preparing assets...</div>
+    </div>
+  </div>
   <audio id="bg-music" src="bg_music/bg.mp3" loop preload="auto" aria-hidden="true"></audio>
   <main class="app-shell">
     <section class="phone-frame" aria-label="Portrait game board">
