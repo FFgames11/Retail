@@ -122,6 +122,10 @@ const glowElement = document.getElementById("tile-glow");
 const floorLayerElement = document.getElementById("floor-layer");
 const npcLayerElement = document.getElementById("npc-layer");
 const assetLayerElement = document.getElementById("asset-layer");
+const frontAssetLayerElement = document.getElementById("front-asset-layer");
+const frontNpcLayerElement = document.getElementById("front-npc-layer");
+const topAssetLayerElement = document.getElementById("top-asset-layer");
+const playerLayerElement = document.getElementById("player-layer");
 const gameScreenElement = document.querySelector(".game-screen");
 const playerElement = document.getElementById("player");
 const bgMusicElement = document.getElementById("bg-music");
@@ -604,6 +608,9 @@ function setChoiceTrayVisible(isVisible) {
 function updateSceneInputState() {
   npcLayerElement?.classList.toggle("is-scene-locked", sceneState.interactionLocked);
   assetLayerElement.classList.toggle("is-scene-locked", sceneState.interactionLocked);
+  frontAssetLayerElement?.classList.toggle("is-scene-locked", sceneState.interactionLocked);
+  frontNpcLayerElement?.classList.toggle("is-scene-locked", sceneState.interactionLocked);
+  topAssetLayerElement?.classList.toggle("is-scene-locked", sceneState.interactionLocked);
 }
 
 function setCameraFocus(row, column, scale) {
@@ -831,6 +838,8 @@ function resolveDestination(start, target) {
 function renderPlayer() {
   playerElement.style.setProperty("--player-row", String(playerState.row));
   playerElement.style.setProperty("--player-column", String(playerState.column));
+  const isFrontDepth = playerState.row >= 6;
+  playerLayerElement?.classList.toggle("is-depth-front", isFrontDepth);
 }
 
 async function movePlayerAlong(path) {
@@ -1559,7 +1568,10 @@ function buildGrid() {
 
 function buildPlaceholders() {
   const assetFragment = document.createDocumentFragment();
+  const frontAssetFragment = document.createDocumentFragment();
   const npcFragment = document.createDocumentFragment();
+  const frontNpcFragment = document.createDocumentFragment();
+  const topAssetFragment = document.createDocumentFragment();
   const floorFragment = document.createDocumentFragment();
 
   placeholders.forEach((placeholder) => {
@@ -1570,7 +1582,22 @@ function buildPlaceholders() {
     }
 
     if (placeholder.type === "human") {
+      if (placeholder.actorId === "ise") {
+        frontNpcFragment.appendChild(element);
+        return;
+      }
+
       npcFragment.appendChild(element);
+      return;
+    }
+
+    if (placeholder.id === "counter") {
+      topAssetFragment.appendChild(element);
+      return;
+    }
+
+    if (placeholder.id === "juice-shelf") {
+      frontAssetFragment.appendChild(element);
       return;
     }
 
@@ -1580,6 +1607,9 @@ function buildPlaceholders() {
   floorLayerElement?.appendChild(floorFragment);
   npcLayerElement?.appendChild(npcFragment);
   assetLayerElement.appendChild(assetFragment);
+  frontAssetLayerElement?.appendChild(frontAssetFragment);
+  frontNpcLayerElement?.appendChild(frontNpcFragment);
+  topAssetLayerElement?.appendChild(topAssetFragment);
 }
 
 function initializePlayer() {
@@ -1629,6 +1659,18 @@ assetLayerElement.addEventListener("click", (event) => {
 });
 
 npcLayerElement?.addEventListener("click", (event) => {
+  handleActorClick(event);
+});
+
+frontAssetLayerElement?.addEventListener("click", (event) => {
+  handleActorClick(event);
+});
+
+frontNpcLayerElement?.addEventListener("click", (event) => {
+  handleActorClick(event);
+});
+
+topAssetLayerElement?.addEventListener("click", (event) => {
   handleActorClick(event);
 });
 
