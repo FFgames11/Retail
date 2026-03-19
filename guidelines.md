@@ -24,9 +24,15 @@ Build a clean mobile-first puzzle board prototype that runs directly in the brow
 
 ## Placeholder Rules
 - `box` placeholders are rectangular stand-ins for future assets.
-- `human` placeholders are temporary circles.
+- `human` placeholders now use character image stand-ins.
 - Placeholders may span multiple tiles horizontally or vertically.
 - Placeholder labels currently display their coordinates for layout review.
+- When replacing a placeholder with real art:
+  - If the art should be confined to its tile footprint, prefer an `<img>` inside the placeholder sized with `object-fit: contain` and keep the placeholder clipped.
+  - If the art should “stand on tiles” but extend beyond the tile footprint (e.g. shelf feet), keep the placeholder in the tile grid but allow the art to overflow:
+    - Set the placeholder `overflow: visible`
+    - Bottom-anchor the `<img>` (absolute `bottom: 0`) and size with `height: auto`
+    - Watch for ancestor containers with `overflow: hidden` (common culprits: board shell/camera wrappers), which can still clip the art.
 
 ## Coordinate Conventions
 - Coordinates are written as `row:column`.
@@ -70,6 +76,7 @@ Build a clean mobile-first puzzle board prototype that runs directly in the brow
 - Scene progression now hands the active glow from Rald to Bjorn and then to Ise, with a second Bjorn dialogue phase and a temporary bread reward marker above Rei.
 - Board zoom was refactored to be pure center-based visual scaling on an inner world layer so the phone viewport stays centered and side gaps no longer shift the board during zoom.
 - Decoration regions are now board-level frame areas on the top, bottom, left, and right, attached to the same scalable wrapper as the tile grid.
+- Human placeholders were replaced with character art (`Rei`, `Rald`, `Bjorn`, `Isei`) using the same placeholder image config/rendering flow as other board assets.
 
 ## Update Rule
 Update this file whenever a major change affects:

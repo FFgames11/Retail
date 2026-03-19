@@ -306,7 +306,23 @@ body {
   animation: tile-click-glow 420ms ease-out forwards;
 }
 
+.box-placeholder.has-placeholder-image.is-highlighted .placeholder-image {
+  filter:
+    drop-shadow(0 0 0.6rem rgba(0, 127, 255, 0.55))
+    drop-shadow(0 0 1.2rem rgba(0, 127, 255, 0.35));
+}
+
 .asset-layer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(5, var(--tile-size));
+  grid-template-rows: repeat(11, var(--tile-size));
+  pointer-events: none;
+  z-index: 3;
+}
+
+.floor-layer {
   position: absolute;
   inset: 0;
   display: grid;
@@ -316,7 +332,21 @@ body {
   z-index: 2;
 }
 
+.npc-layer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(5, var(--tile-size));
+  grid-template-rows: repeat(11, var(--tile-size));
+  pointer-events: none;
+  z-index: 4;
+}
+
 .asset-layer.is-scene-locked .placeholder-interactive {
+  pointer-events: none;
+}
+
+.npc-layer.is-scene-locked .placeholder-interactive {
   pointer-events: none;
 }
 
@@ -324,7 +354,7 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 3;
+  z-index: 5;
 }
 
 .tile {
@@ -413,13 +443,53 @@ body {
   background: #f8f4ff;
 }
 
-.box-placeholder.is-spill {
-  background: linear-gradient(180deg, #5ea6d8, #3b7fb3);
-  color: #ffffff;
+.box-placeholder[data-box-id="cabinet-left"] {
+  background: gray;
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.1),
-    0 2px 6px rgba(35, 75, 105, 0.2);
+    inset 0 2px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.16);
+}
+
+.has-placeholder-image {
+  margin: 0;
+  border-radius: 10px;
+  background: none;
+  box-shadow: none;
+}
+
+.has-placeholder-image .placeholder-image {
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+.has-placeholder-image.is-contained-image {
+  overflow: hidden;
+}
+
+.has-placeholder-image.is-contained-image .placeholder-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.has-placeholder-image.is-overflow-image {
+  overflow: visible;
+}
+
+.has-placeholder-image.is-overflow-image .placeholder-image {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 100%;
+  height: auto;
+  transform: translateX(-50%);
+}
+
+.box-placeholder.has-placeholder-image.is-overflow-image[data-box-id="cabinet"] .placeholder-image {
+  width: 135%;
 }
 
 .box-placeholder::after {
@@ -466,6 +536,29 @@ body {
     0 4px 8px rgba(67, 85, 98, 0.18);
 }
 
+.human-placeholder.has-placeholder-image {
+  width: 100%;
+  height: 100%;
+  align-self: stretch;
+  justify-self: stretch;
+  aspect-ratio: auto;
+  background: none;
+  box-shadow: none;
+  color: transparent;
+  border-radius: 0;
+  --bubble-offset: calc(var(--tile-size) * 0.62);
+}
+
+.human-placeholder.has-placeholder-image .placeholder-image {
+  width: 120%;
+}
+
+.box-placeholder.has-placeholder-image[data-box-id="spill"] {
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
 .placeholder-interactive {
   pointer-events: auto;
   cursor: pointer;
@@ -489,7 +582,7 @@ body {
 }
 
 .player-placeholder {
-  --player-size: calc(var(--tile-size) * 0.54);
+  --player-size: calc(var(--tile-size) * 0.72);
   position: absolute;
   display: grid;
   place-items: center;
@@ -514,6 +607,24 @@ body {
     transform 140ms ease;
 }
 
+.player-placeholder.has-player-image {
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  --bubble-offset: calc(var(--tile-size) * 0.62);
+}
+
+.player-image {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 140%;
+  height: auto;
+  transform: translateX(-50%);
+  pointer-events: none;
+  user-select: none;
+}
+
 .player-label {
   position: relative;
   z-index: 1;
@@ -531,6 +642,8 @@ body {
   width: calc(var(--tile-size) * 0.82);
   height: calc(var(--tile-size) * 0.82);
   border-radius: 50%;
+  overflow: hidden;
+  padding: 12%;
   display: grid;
   place-items: center;
   background: rgba(255, 255, 255, 0.96);
@@ -562,10 +675,20 @@ body {
     0 10px 22px rgba(57, 80, 61, 0.18);
 }
 
+.player-item-token .player-item-image {
+  width: 74%;
+  height: 74%;
+  display: block;
+  align-self: center;
+  justify-self: center;
+  object-fit: contain;
+  object-position: center;
+}
+
 .speech-bubble {
   position: absolute;
   left: 50%;
-  bottom: calc(100% + 10px);
+  bottom: calc(100% + var(--bubble-offset, 10px));
   transform: translateX(-50%);
   min-width: calc(var(--tile-size) * 2.2);
   max-width: calc(var(--tile-size) * 4.4);

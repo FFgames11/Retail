@@ -119,6 +119,8 @@ const DIALOGUE_AUDIO_FILES = {
 const gridElement = document.getElementById("grid");
 const boardCameraElement = document.getElementById("board-world");
 const glowElement = document.getElementById("tile-glow");
+const floorLayerElement = document.getElementById("floor-layer");
+const npcLayerElement = document.getElementById("npc-layer");
 const assetLayerElement = document.getElementById("asset-layer");
 const gameScreenElement = document.querySelector(".game-screen");
 const playerElement = document.getElementById("player");
@@ -140,6 +142,31 @@ const progressBarFill = document.getElementById("progress-bar-fill");
 const clickSfx = new Audio("sfx/click.mp3");
 const obtainSfx = new Audio("sfx/obtain.mp3");
 const gameCompleteSfx = new Audio("sfx/game_complete.mp3");
+
+const ITEM_POP_IMAGES = {
+  Bread: "img/bread_pop.png",
+  Eggs: "img/egg_pop.png",
+  "Orange Juice": "img/orange_pop.png"
+};
+
+const PLACEHOLDER_IMAGE_CONFIG = {
+  "bread-shelf": { src: "img/bread_shelf.png", mode: "overflow" },
+  "can-shelf": { src: "img/can_shelf.png", mode: "overflow" },
+  "egg-shelf": { src: "img/egg_shelf.png", mode: "overflow" },
+  "apple-shelf": { src: "img/apple_shelf.png", mode: "overflow" },
+  "juice-shelf": { src: "img/juice_shelf.png", mode: "overflow" },
+  baskets: { src: "img/baskets.png", mode: "overflow" },
+  cabinet: { src: "img/Cabinet.png", mode: "overflow" },
+  counter: { src: "img/counter.png", mode: "overflow" },
+  spill: { src: "img/spill.png", mode: "contained" }
+};
+
+const ACTOR_IMAGE_CONFIG = {
+  player: { src: "img/Rei.png", mode: "overflow" },
+  rald: { src: "img/Rald.png", mode: "overflow" },
+  bjorn: { src: "img/Bjorn.png", mode: "overflow" },
+  ise: { src: "img/Isei.png", mode: "overflow" }
+};
 
 const placeholders = [
   { id: "bread-shelf", type: "box", startRow: 1, endRow: 1, startColumn: 1, endColumn: 2 },
@@ -175,6 +202,7 @@ const sceneState = {
   breadObtained: false,
   iseResolved: false,
   bjornEggsStarted: false,
+  spillMissionTriggered: false,
   eggShelfClickCount: 0,
   mopObtained: false,
   spillCleaned: false,
@@ -208,17 +236,34 @@ function createPlaceholder({ id, type, actorId, startRow, endRow, startColumn, e
   const label = getPlaceholderLabel(type, actorId, startRow, endRow, startColumn, endColumn);
 
   element.className = `${type}-placeholder${isWalkableHighlight ? " is-walkable-highlight" : ""}`;
-  if (label === "Spill") {
-    element.classList.add("is-spill");
-  }
 
   element.style.gridRow = `${startRow} / ${endRow + 1}`;
   element.style.gridColumn = `${startColumn} / ${endColumn + 1}`;
-  element.textContent = label;
+  const imageConfig = id ? PLACEHOLDER_IMAGE_CONFIG[id] : ACTOR_IMAGE_CONFIG[actorId];
+  if (imageConfig) {
+    element.classList.add("has-placeholder-image");
+    element.classList.add(imageConfig.mode === "contained" ? "is-contained-image" : "is-overflow-image");
+    element.textContent = "";
+    element.setAttribute("aria-label", label);
+
+    const img = document.createElement("img");
+    img.className = "placeholder-image";
+    img.src = imageConfig.src;
+    img.alt = "";
+    img.draggable = false;
+    element.appendChild(img);
+  } else if (id === "cabinet-left") {
+    element.textContent = "";
+    element.setAttribute("aria-label", label);
+  } else {
+    element.textContent = label;
+  }
 
   if (id) {
     element.dataset.boxId = id;
-    element.classList.add("placeholder-interactive");
+    if (id !== "cabinet" && id !== "cabinet-left") {
+      element.classList.add("placeholder-interactive");
+    }
   }
 
   if (actorId) {
@@ -291,8 +336,14 @@ async function preloadAsset(assetPath) {
 async function preloadAssets() {
   const imagePaths = getPreloadImagePaths();
   const dialogueAudioPaths = Object.values(DIALOGUE_AUDIO_FILES).map((fileName) => `${DIALOGUE_AUDIO_BASE_PATH}/${fileName}`);
+  const placeholderImagePaths = Object.values(PLACEHOLDER_IMAGE_CONFIG).map(({ src }) => src);
+  const actorImagePaths = Object.values(ACTOR_IMAGE_CONFIG).map(({ src }) => src);
+  const itemPopImagePaths = Object.values(ITEM_POP_IMAGES);
   const assetPaths = [
     ...imagePaths,
+    ...placeholderImagePaths,
+    ...actorImagePaths,
+    ...itemPopImagePaths,
     "bg_music/bg.mp3",
     "sfx/click.mp3",
     "sfx/obtain.mp3",
@@ -514,7 +565,21 @@ function showPlayerItemToken(text) {
     playerElement.appendChild(token);
   }
 
-  token.textContent = text;
+  token.textContent = "";
+  token.setAttribute("aria-label", text);
+
+  const imagePath = ITEM_POP_IMAGES[text];
+  if (imagePath) {
+    const img = document.createElement("img");
+    img.className = "player-item-image";
+    img.src = imagePath;
+    img.alt = "";
+    img.draggable = false;
+    token.appendChild(img);
+  } else {
+    token.textContent = text;
+  }
+
   token.classList.remove("is-visible", "is-glowing");
   void token.offsetWidth;
   token.classList.add("is-visible");
@@ -537,6 +602,7 @@ function setChoiceTrayVisible(isVisible) {
 }
 
 function updateSceneInputState() {
+  npcLayerElement?.classList.toggle("is-scene-locked", sceneState.interactionLocked);
   assetLayerElement.classList.toggle("is-scene-locked", sceneState.interactionLocked);
 }
 
@@ -1044,7 +1110,11 @@ async function handleEggShelfClick() {
   await wait(720);
   
   const cabinet = document.querySelector('[data-box-id="cabinet"]');
-  if (cabinet) cabinet.classList.add("is-highlighted");
+  sceneState.spillMissionTriggered = true;
+  if (cabinet) {
+    cabinet.classList.add("is-highlighted");
+    cabinet.classList.add("placeholder-interactive");
+  }
   
   sceneState.interactionLocked = false;
   sceneState.boardInputEnabled = true;
@@ -1090,7 +1160,7 @@ async function handleBreadShelfClick() {
 }
 
 async function handleCabinetClick() {
-  if (sceneState.mopObtained) return;
+  if (sceneState.mopObtained || !sceneState.spillMissionTriggered) return;
   
   sceneState.interactionLocked = true;
   updateSceneInputState();
@@ -1488,13 +1558,28 @@ function buildGrid() {
 }
 
 function buildPlaceholders() {
-  const fragment = document.createDocumentFragment();
+  const assetFragment = document.createDocumentFragment();
+  const npcFragment = document.createDocumentFragment();
+  const floorFragment = document.createDocumentFragment();
 
   placeholders.forEach((placeholder) => {
-    fragment.appendChild(createPlaceholder(placeholder));
+    const element = createPlaceholder(placeholder);
+    if (placeholder.id === "cabinet-left") {
+      floorFragment.appendChild(element);
+      return;
+    }
+
+    if (placeholder.type === "human") {
+      npcFragment.appendChild(element);
+      return;
+    }
+
+    assetFragment.appendChild(element);
   });
 
-  assetLayerElement.appendChild(fragment);
+  floorLayerElement?.appendChild(floorFragment);
+  npcLayerElement?.appendChild(npcFragment);
+  assetLayerElement.appendChild(assetFragment);
 }
 
 function initializePlayer() {
@@ -1502,16 +1587,23 @@ function initializePlayer() {
     return;
   }
 
-  let labelElement = playerElement.querySelector(".player-label");
+  const playerImagePath = ACTOR_IMAGE_CONFIG.player?.src;
+  if (playerImagePath) {
+    let imageElement = playerElement.querySelector(".player-image");
+    if (!imageElement) {
+      imageElement = document.createElement("img");
+      imageElement.className = "player-image";
+      imageElement.alt = "";
+      imageElement.draggable = false;
+      playerElement.prepend(imageElement);
+    }
 
-  if (!labelElement) {
-    labelElement = document.createElement("span");
-    labelElement.className = "player-label";
-    playerElement.prepend(labelElement);
+    imageElement.src = playerImagePath;
+    playerElement.classList.add("has-player-image");
   }
 
-  labelElement.textContent = PLAYER_LABEL;
   playerElement.dataset.actorId = "player";
+  playerElement.setAttribute("aria-label", PLAYER_LABEL);
   cleaningProgressWrap.hidden = true;
   progressBarFill.style.width = "0%";
   renderPlayer();
@@ -1533,6 +1625,10 @@ gameScreenElement?.addEventListener("click", () => {
 }, true);
 
 assetLayerElement.addEventListener("click", (event) => {
+  handleActorClick(event);
+});
+
+npcLayerElement?.addEventListener("click", (event) => {
   handleActorClick(event);
 });
 
